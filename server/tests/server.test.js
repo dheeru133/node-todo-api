@@ -2,20 +2,22 @@
  * @Author: Dheeraj Chaudhary 
  * @Date: 2018-02-11 15:05:08 
  * @Last Modified by: Dheeraj.Chaudhary@contractor.hallmark.com
- * @Last Modified time: 2018-02-11 16:14:25
+ * @Last Modified time: 2018-02-11 17:54:50
  */
 const expect = require('expect');
 const request = require('supertest');
 
 const { app } = require('./../server');
 const { Todo } = require('./../models/todos');
-
+const { ObjectID } = require('mongodb');
 // Seed Data
 
 const todos = [{
+        _id: new ObjectID(),
         text: 'Test todo 1'
     },
     {
+        _id: new ObjectID(),
         text: 'Test todo 2'
     }
 ];
@@ -88,6 +90,31 @@ describe('GET / todos', () => {
             .expect(200)
             .expect((res) => {
                 expect(res.body.docs.length).toBe(2);
+            })
+            .end(done);
+    });
+});
+
+describe('GET / todos/:id', () => {
+    it('should return todo Docs', (done) => {
+
+        request(app)
+            .get('/todos/' + todos[0]._id.toHexString())
+            .expect(200)
+            .expect((res) => {
+                expect(res.body.todo.text).toBe(todos[0].text);
+            })
+            .end(done);
+    });
+
+    it('should return todo 400 bad request', (done) => {
+
+        request(app)
+            .get('/todos/5a80cef46353e027dc189a9f')
+            .expect(404)
+            .expect((res) => {
+                console.log(res.body);
+                // expect(res.body.todo.text).toBe(todos[0].text);
             })
             .end(done);
     });

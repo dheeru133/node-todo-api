@@ -2,9 +2,10 @@
  * @Author: Dheeraj Chaudhary 
  * @Date: 2018-02-11 13:19:25 
  * @Last Modified by: Dheeraj.Chaudhary@contractor.hallmark.com
- * @Last Modified time: 2018-02-11 16:48:25
+ * @Last Modified time: 2018-02-11 17:58:28
  */
 // ######################Required Packages########################
+//// ./%npm_package_config_path%
 var bodyParser = require('body-parser');
 
 // ########################Express App#############################
@@ -53,17 +54,17 @@ app.get('/todos/:id', (req, res) => {
     var id = req.params.id;
 
     if (ObjectID.isValid(id)) {
-
-        Todo.findById(id).then((users) => {
-            if (!users) {
-                res.status(400).send('User not found');
+        Todo.findById(id).then((todo) => {
+            if (!todo) {
+                res.status(404).send('To do  not found');
             }
-            res.status(200).send({ users });
+            res.status(200).send({ todo });
         }).catch((error) => {
-            res.status(400).send(error);
+            res.status(404).send(error);
         });
+
     } else {
-        res.status(400).send('Id is not valid');
+        res.status(404).send('Id is not valid');
     }
 });
 
