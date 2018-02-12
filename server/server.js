@@ -2,23 +2,25 @@
  * @Author: Dheeraj Chaudhary 
  * @Date: 2018-02-11 13:19:25 
  * @Last Modified by: Dheeraj.Chaudhary@contractor.hallmark.com
- * @Last Modified time: 2018-02-11 17:58:28
+ * @Last Modified time: 2018-02-11 22:49:11
  */
 // ######################Required Packages########################
 //// ./%npm_package_config_path%
-var bodyParser = require('body-parser');
+const bodyParser = require('body-parser');
+const env = require('./config/config');
 
 // ########################Express App#############################
-var express = require('express');
+const express = require('express');
+const _ = require('lodash');
 var app = express();
-var port = process.env.PORT || 3000;
+var port = process.env.PORT;
 app.listen(port, () => {
     console.log('App running on PORT : ', port);
 });
 
 //###############DB Connection#########################################
 var { mongoose } = require('./db/mongoose');
-var { ObjectID } = require('mongodb');
+const { ObjectID } = require('mongodb');
 // MODELS#####################################
 var { Todo } = require('./models/todos');
 var { Users } = require('./models/users');
@@ -30,7 +32,8 @@ app.use(bodyParser.json());
 
 app.post('/todos', (req, res) => {
     var newTodo = new Todo({
-        text: req.body.text
+        text: req.body.text,
+        completed: req.body.completed,
     });
 
     newTodo.save().then((doc) => {
@@ -56,7 +59,7 @@ app.get('/todos/:id', (req, res) => {
     if (ObjectID.isValid(id)) {
         Todo.findById(id).then((todo) => {
             if (!todo) {
-                res.status(404).send('To do  not found');
+                res.status(404).send('Not found');
             }
             res.status(200).send({ todo });
         }).catch((error) => {
@@ -67,6 +70,56 @@ app.get('/todos/:id', (req, res) => {
         res.status(404).send('Id is not valid');
     }
 });
+
+app.delete('/todos/:id', (req, res) => {
+
+    var id = req.params.id;
+
+    if (ObjectID.isValid(id)) {
+        Todo.findByIdAndRemove(id).then((todo) => {
+            if (!todo) {
+                res.status(404).send('No item found to delete');
+            }
+            res.status(200).send({ todo });
+        }).catch((error) => {
+            res.status(404).send(error);
+        });
+
+    } else {
+        res.status(404).send('Id is not valid');
+    }
+});
+
+app.patch('/todos/:id', (req, res) => {
+
+    var id = req.params.id;
+    var body = _.pick(req.body, ['text', 'completed']);
+
+    if (!ObjectID.isValid(id)) {
+        return res.status(404).send();
+    }
+
+    if (_.isBoolean(body.completed) && body.completed) {
+        body.completedAt = new Date().getTime();
+    } else {
+        body.completed = false;
+        body.completedAt = null;
+    }
+
+    Todo.findByIdAndUpdate(id, {
+        $set: body
+    }, {
+        new: true
+    }).then((todo) => {
+        if (!todo) {
+            return res.status(404).send('No Id found to update');
+        }
+        res.status(200).send({ todo });
+    }).catch((error) => {
+        res.status(404).send('Error while connecting DB or something realted to DB')
+    });
+});
+
 
 
 

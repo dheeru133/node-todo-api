@@ -2,7 +2,7 @@
  * @Author: Dheeraj Chaudhary 
  * @Date: 2018-02-11 15:05:08 
  * @Last Modified by: Dheeraj.Chaudhary@contractor.hallmark.com
- * @Last Modified time: 2018-02-11 17:54:50
+ * @Last Modified time: 2018-02-11 22:31:52
  */
 const expect = require('expect');
 const request = require('supertest');
@@ -14,11 +14,13 @@ const { ObjectID } = require('mongodb');
 
 const todos = [{
         _id: new ObjectID(),
-        text: 'Test todo 1'
+        text: 'Test todo 1',
     },
     {
         _id: new ObjectID(),
-        text: 'Test todo 2'
+        text: 'Test todo 2',
+        completed: true,
+        completedAt: 333
     }
 ];
 
@@ -113,8 +115,84 @@ describe('GET / todos/:id', () => {
             .get('/todos/5a80cef46353e027dc189a9f')
             .expect(404)
             .expect((res) => {
-                console.log(res.body);
+                // console.log(res.body);
                 // expect(res.body.todo.text).toBe(todos[0].text);
+            })
+            .end(done);
+    });
+});
+
+describe('DELETE / todos/:id', () => {
+    it('should delete the todos', (done) => {
+
+        var hexId = todos[0]._id.toHexString();
+        request(app)
+            .delete(`/todos/${hexId}`)
+            .expect(200)
+            .expect((res) => {
+                expect(res.body.todo.text).toBe(todos[0].text);
+            })
+            .end((error, result) => {
+                if (error) {
+                    return done(error);
+                }
+                Todo.findById(hexId).then((result) => {
+                    expect(result).toNotExist();
+                    done();
+                }).catch((error) => {
+                    done(error);
+                });
+            });
+    });
+
+    it('should return todo 400 if not found to delete', (done) => {
+
+        request(app)
+            .delete('/todos/5a80cef46353e027dc189a9f')
+            .expect(404)
+            .expect((res) => {
+                // console.log(res.body);
+                // expect(res.body.todo.text).toBe(todos[0].text);
+            })
+            .end(done);
+    });
+});
+
+// PATCH
+describe('PATCH / todos/:id', () => {
+    it('should update the todos', (done) => {
+
+        var hexId = todos[0]._id.toHexString();
+        var text = 'Updated from test method';
+        request(app)
+            .patch(`/todos/${hexId}`)
+            .send({
+                completed: true,
+                text
+            })
+            .expect(200)
+            .expect((res) => {
+                expect(res.body.todo.text).toBe(text);
+                expect(res.body.todo.completed).toBe(true);
+                expect(res.body.todo.completedAt).toBeA('number');
+            })
+            .end(done);
+    });
+
+    it('should clear the completed at when completed not true', (done) => {
+        var hexId = todos[0]._id.toHexString();
+        var text = 'Updated from test method clear completed';
+        request(app)
+            .patch(`/todos/${hexId}`)
+            .send({
+                completed: false,
+                text
+            })
+            .expect(200)
+            .expect((res) => {
+                expect(res.body.todo.text).toBe(text);
+                expect(res.body.todo.completed).toBe(false);
+                expect(res.body.todo.completedAt).toNotExist();
             })
             .end(done);
     });
