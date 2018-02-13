@@ -1,30 +1,31 @@
 /*
- * @Author: Dheeraj Chaudhary 
- * @Date: 2018-02-11 14:14:11 
+ * @Author: Dheeraj Chaudhary
+ * @Date: 2018-02-11 14:14:11
  * @Last Modified by: Dheeraj.Chaudhary@contractor.hallmark.com
- * @Last Modified time: 2018-02-11 14:19:31
+ * @Last Modified time: 2018-02-13 15:41:52
  */
 
-var mongoose = require('mongoose');
+const mongoose = require('mongoose');
 
-//MODEL TODOS
-var Todo = mongoose.model('Todo', {
+
+// MODEL TODOS
+const Todo = mongoose.model('Todo', {
     text: {
         type: String,
         required: true,
         minlength: 1,
-        trim: true
+        trim: true,
     },
     completed: {
         type: Boolean,
-        default: false
+        default: false,
     },
     completedAt: {
         type: Number,
-        default: null
-    }
+        default: null,
+    },
 });
 
 module.exports = {
-    Todo: Todo
+    Todo,
 };
