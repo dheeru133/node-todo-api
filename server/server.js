@@ -2,12 +2,13 @@
  * @Author: Dheeraj Chaudhary
  * @Date: 2018-02-11 13:19:25
  * @Last Modified by: Dheeraj.Chaudhary@contractor.hallmark.com
- * @Last Modified time: 2018-02-13 15:52:58
+ * @Last Modified time: 2018-02-15 13:51:34
  */
 // ######################Required Packages########################
 // // ./%npm_package_config_path%
 const bodyParser = require('body-parser');
 const env = require('./config/config');
+const { authenticate } = require('./middleware/authenticate');
 
 // ########################Express App#############################
 const express = require('express');
@@ -29,7 +30,7 @@ const { Users } = require('./models/users');
 // ######################### middleware#################################
 app.use(bodyParser.json());
 
-// ######################### ROUTES######################################
+// ######################### ROUTES TODOS######################################
 
 app.post('/todos', (req, res) => {
     const newTodo = new Todo({
@@ -113,6 +114,28 @@ app.patch('/todos/:id', (req, res) => {
     } else {
         res.status(404).send();
     }
+});
+
+
+
+// ######################### ROUTES Users######################################
+app.post('/users', (req, res) => {
+
+    const body = _.pick(req.body, ['email', 'password']);
+    const newUser = new Users(body);
+
+    newUser.save().then(() => {
+        return newUser.generateAuthToken()
+    }).then((token) => {
+        res.header('x_auth', token).status(200).send(newUser);
+    }).catch((error) => {
+        res.status(400).send(error);
+    });
+});
+
+app.get('/users/authenticate', authenticate, (req, res) => {
+    res.send(req.user);
+
 });
 
 // Export
