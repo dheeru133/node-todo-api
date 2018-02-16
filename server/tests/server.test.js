@@ -2,7 +2,7 @@
  * @Author: Dheeraj Chaudhary 
  * @Date: 2018-02-11 15:05:08 
  * @Last Modified by: Dheeraj.Chaudhary@contractor.hallmark.com
- * @Last Modified time: 2018-02-11 22:31:52
+ * @Last Modified time: 2018-02-15 14:42:18
  */
 const expect = require('expect');
 const request = require('supertest');
@@ -25,11 +25,12 @@ const todos = [{
 ];
 
 //Empty database before every request
-beforeEach((done) => {
+beforeEach(() => {
+
     Todo.remove({}).then(() => {
         return Todo.insertMany(todos);
     }).then(() => {
-        done();
+        // done();
     });
 });
 
@@ -56,7 +57,7 @@ describe('POST / todos', () => {
                     expect(todos.length).toBe(1);
                     expect(todos[0].text).toBe(newText);
                 }).catch((e) => {
-                    // done(e)
+                    // done(e);
                 });
             });
     });
@@ -96,6 +97,7 @@ describe('GET / todos', () => {
             .end(done);
     });
 });
+
 
 describe('GET / todos/:id', () => {
     it('should return todo Docs', (done) => {

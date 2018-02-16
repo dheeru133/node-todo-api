@@ -2,7 +2,7 @@
  * @Author: Dheeraj Chaudhary
  * @Date: 2018-02-11 14:14:15
  * @Last Modified by: Dheeraj.Chaudhary@contractor.hallmark.com
- * @Last Modified time: 2018-02-15 13:42:42
+ * @Last Modified time: 2018-02-15 23:24:10
  */
 
 const jwt = require('jsonwebtoken');
@@ -47,7 +47,7 @@ userSchema.methods.generateAuthToken = function() {
     var token = jwt.sign({
         _id: user._id.toHexString(),
         access: access,
-    }, 'Hallmark Salt').toString();
+    }, process.env.JWT_SECRET).toString();
     user.tokens.push({
         access: access,
         token: token
@@ -62,6 +62,18 @@ userSchema.methods.generateAuthToken = function() {
     });
 };
 
+// Instance method
+userSchema.methods.removeToken = function(token) {
+    var user = this;
+    return user.update({
+        $pull: {
+            tokens: {
+                token: token
+            }
+        }
+    });
+};
+
 //Model method
 userSchema.statics.findByToken = function(token) {
 
@@ -69,7 +81,7 @@ userSchema.statics.findByToken = function(token) {
     var decoded;
 
     try {
-        decoded = jwt.verify(token, 'Hallmark Salt');
+        decoded = jwt.verify(token, process.env.JWT_SECRET);
     } catch (e) {
         // return new Promise((resolv, reject) => {
         //     reject('JWT error');
@@ -85,9 +97,33 @@ userSchema.statics.findByToken = function(token) {
     }
 };
 
+//Model method
+userSchema.statics.findByCredentials = function(email, password) {
+
+    var User = this;
+    return User.findOne({
+        email: email
+    }).then((user) => {
+        if (!user) {
+            return Promise.reject();
+        }
+
+        return new Promise((resolve, reject) => {
+            bcrypt.compare(password, user.password, (err, res) => {
+                if (res) {
+                    resolve(user);
+                } else {
+                    reject();
+                }
+            });
+        });
+
+    });
+};
+
 
 // ################## Middleware on Mongoose. Before saving bind the event
-// Hashin the password before saving it
+// Hashing the password before saving it
 
 userSchema.pre('save', function(next) {
     var user = this;
