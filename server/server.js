@@ -2,13 +2,15 @@
  * @Author: Dheeraj Chaudhary
  * @Date: 2018-02-11 13:19:25
  * @Last Modified by: Dheeraj.Chaudhary@contractor.hallmark.com
- * @Last Modified time: 2018-02-15 22:58:06
+ * @Last Modified time: 2018-02-19 11:57:26
  */
 // ######################Required Packages########################
 // // ./%npm_package_config_path%
 const bodyParser = require('body-parser');
 const env = require('./config/config');
 const { authenticate } = require('./middleware/authenticate');
+const path = require('path');
+const fs = require('fs');
 
 // ########################Express App#############################
 const express = require('express');
@@ -29,6 +31,27 @@ const { Users } = require('./models/users');
 
 // ######################### middleware#################################
 app.use(bodyParser.json());
+app.use((req, res, next) => {
+    var now = new Date().toString();
+    var log = `${now}: ${req.method} : ${req.url}`;
+
+    console.log(log);
+    fs.appendFile('server.log', log + '\n', (error) => {
+        if (error) {
+            console.log('Unable to write the logs of application');
+        }
+    });
+    next();
+});
+
+const publicPath = path.join(__dirname, '../public');
+app.use(express.static(publicPath));
+
+// app.use((req, res, next) => {
+//     res.render('maintenance.hbs');
+// });
+
+// app.use(express.static(__dirname + '/shoppingCart'));
 
 // ######################### ROUTES TODOS######################################
 
