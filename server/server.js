@@ -2,7 +2,7 @@
  * @Author: Dheeraj Chaudhary
  * @Date: 2018-02-11 13:19:25
  * @Last Modified by: Dheeraj.Chaudhary@contractor.hallmark.com
- * @Last Modified time: 2018-02-24 14:29:53
+ * @Last Modified time: 2018-02-24 14:38:08
  */
 // ######################Required Packages########################
 // // ./%npm_package_config_path%
@@ -99,59 +99,60 @@ app.get('/todos/:id', authenticate, (req, res) => {
 });
 
 
-app.delete('/todos/:id', authenticate, (req, res) => {
-    const { id } = req.params;
-    if (ObjectID.isValid(id)) {
-        Todo.findOneAndRemove({
-            _id: id,
-            _creator: req.user._id,
-        }).then((todo) => {
+app.delete('/todos/:id', authenticate, async(req, res) => {
+    try {
+        const { id } = req.params;
+        if (ObjectID.isValid(id)) {
+            const todo = await Todo.findOneAndRemove({
+                _id: id,
+                _creator: req.user._id,
+            });
             if (!todo) {
                 res.status(404).send('No item found to delete');
             }
             res.status(200).send({
                 todo
             });
-        }).catch((error) => {
-            res.status(404).send(error);
-        });
-    } else {
-        res.status(404).send('Id is not valid');
+
+        } else {
+            res.status(404).send('Id is not valid');
+        }
+    } catch (error) {
+        res.status(400).send();
     }
 });
 
 
-app.patch('/todos/:id', authenticate, (req, res) => {
-    const { id } = req.params;
-    const body = _.pick(req.body, ['text', 'completed']);
-    if (ObjectID.isValid(id)) {
-        if (_.isBoolean(body.completed) && body.completed) {
-            body.completedAt = new Date().getTime();
-        } else {
-            body.completed = false;
-            body.completedAt = null;
-        }
-        Todo.findOnedAndUpdate({
-            _id: id,
-            _creator: req.user._id,
-        }, {
-            $set: body,
-        }, {
-            new: true,
-        }).then((todo) => {
-            if (todo) {
-                res.status(200).send({
-                    todo
-                });
+app.patch('/todos/:id', authenticate, async(req, res) => {
+    try {
+        const { id } = req.params;
+        const body = _.pick(req.body, ['text', 'completed']);
+        if (ObjectID.isValid(id)) {
+            if (_.isBoolean(body.completed) && body.completed) {
+                body.completedAt = new Date().getTime();
             } else {
-                res.status(404).send('No Id found to update');
+                body.completed = false;
+                body.completedAt = null;
             }
-        }).catch((error) => {
-            res.status(404).send('Error while connecting DB or something realted to DB:', error);
-        });
-    } else {
-        res.status(404).send();
+            const todo = await Todo.findOnedAndUpdate({
+                _id: id,
+                _creator: req.user._id,
+            }, {
+                $set: body,
+            }, {
+                new: true,
+            });
+            if (!todo) {
+                res.status(404).send('No item found to authenticate');
+            }
+            res.status(200).send(todo);
+        } else {
+            res.status(404).send();
+        }
+    } catch (error) {
+        res.status(400).send();
     }
+
 });
 
 
